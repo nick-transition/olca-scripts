@@ -43,11 +43,17 @@ for id in idX:
     	rowId = rName+"-"+rLoc+"-"+process.name
     	rows[rowId] = rowValue
 
-          #log.info("Name: {}, Amount: {}",process.name,str(processContributions.getContribution(process).amount))
+
+f = open('C:/Users/nstoddar/Desktop/results_out.csv','wb')
+writer = csv.writer(f)
+
+writer.writerow(header)
+
 for key in rows.keys():
-    log.info("key:{} , vals:{}",key,str(rows[key]))
+    rowContents = [str(key)]
+    for value in rows[key]:
+        rowContents.append(value)
+    #log.info(rowContents)
+    writer.writerow(rowContents)
 
-
-
-#f = open('C:/Users/nstoddar/Desktop/results_out.csv','wb')
-#writer = csv.writer(f)
+f.close()
