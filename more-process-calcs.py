@@ -4,12 +4,13 @@ import csv
 
 # Find category folder
 category = olca.getCategory("Agriculture, forestry and fishing")
-subcat = category.getChildCategories().elementAt(2).name # log.info(elem.name) == Growing of rice
-system = olca.getSystem("rice")
+subcat = category.getChildCategories().elementAt(0).name # log.info(elem.name) == Growing of rice
+keyword = "operation of Bed-Paratill"
+sysName = "Operation"
 idX=[]
 
 def checkCat(p):
-  if p.getCategory().name == subcat:
+  if p.getCategory().name == subcat and p.name.find(keyword)==0:
     idX.append(p.getId())
     return idX
   else:
@@ -21,15 +22,16 @@ olca.eachProcess(checkCat)
 header =['ParentProcess-Location-ChildProcess']
 
 rows = {}
+i=0
 for id in idX:
 # update rice product system with a process
     replacement = olca.getProcess(id)
     rName = replacement.name
     rLoc = replacement.location.name
-    system.setReferenceProcess(replacement)
-    i=0
+    olca.getSystem(sysName).setReferenceProcess(replacement)
+
     # Run calculation on the system
-    result = olca.analyze(system,olca.getMethod("TRACI"))
+    result = olca.analyze(olca.getSystem(sysName),olca.getMethod("TRACI"))
     impacts = result.getImpactDescriptors()
     processes = result.getProcessDescriptors()
     for process in processes:
@@ -42,9 +44,10 @@ for id in idX:
             rowValue.append(str(processContributions.getContribution(process).amount))
     	rowId = rName+"-"+rLoc+"-"+process.name
     	rows[rowId] = rowValue
+    i+=1
 
 
-f = open('C:/Users/nstoddar/Desktop/results_out.csv','wb')
+f = open('C:/Users/nstoddar/Desktop/results_'+keyword+'.csv','wb')
 writer = csv.writer(f)
 
 writer.writerow(header)
