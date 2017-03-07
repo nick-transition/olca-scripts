@@ -1,5 +1,6 @@
 import csv
 
+
 filePath = 'C:/Users/nstoddar/Data/template.csv'
 
 
@@ -21,13 +22,13 @@ def findId(folder, process, location):
 
 def updateProcess(id,flow,amount):
   pro = olca.getProcess(id)
-  exs = pro.getExchanges()
+  exs = olce.getExchanges()
 
-  for ex in exs:
+  for ex in exchanges:
     if ex.flow.name == flow:
-      ex.amountValue = float(amount)
+      log.info("I am working :)")
+      ex.amountValue = amount
   olca.updateProcess(pro)
-  log.info("{} has been updated",pro.name)
   return
 
 
@@ -36,4 +37,5 @@ with open(filePath, 'rb') as csvfile:
     next(linereader)
     for row in linereader:
         id = findId(row[0],row[1],row[4])
+        log.info(str(id))
         updateProcess(id,row[2],row[3])

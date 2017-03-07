@@ -1,8 +1,9 @@
 import csv
 
+# Path to csv template containing inventory information
 filePath = 'C:/Users/nstoddar/Data/template.csv'
 
-
+#Finds process to be updated
 def findId(folder, process, location):
   id = []
   def checkProc(p):
@@ -19,15 +20,20 @@ def findId(folder, process, location):
     log.error("Uh oh! I couldn't find {}{} anywhere in {}. Check your spelling and try again!",process,location,folder)
     return
 
-def updateProcess(id,flow,amount):
+# updates discovered process
+def updateProcess(id,flow,amount,description):
   pro = olca.getProcess(id)
   exs = pro.getExchanges()
 
+
+
   for ex in exs:
-    if ex.flow.name == flow:
+    if ex.flow.name == flow and ex.flow.desciption == description:
       ex.amountValue = float(amount)
-  olca.updateProcess(pro)
-  log.info("{} has been updated",pro.name)
+      olca.updateProcess(pro)
+      log.info("{}'s flow — {} — has been updated",pro.name,flow)
+    else:
+      log.error("{} flow not found in {}.",flow,pro.name)
   return
 
 
@@ -35,5 +41,11 @@ with open(filePath, 'rb') as csvfile:
     linereader = csv.reader(csvfile, delimiter=',',quotechar='"')
     next(linereader)
     for row in linereader:
-        id = findId(row[0],row[1],row[4])
-        updateProcess(id,row[2],row[3])
+        folder = row[0].replace("\"","").strip()
+        process = row[1].replace("\"","").strip()
+        flow = row[2].replace("\"","").strip()
+        amount = row[3].replace("\"","").strip()
+        location = row[4].replace("\"","").strip()
+        description = row[5].replace("\"","").strip()
+        id = findId(folder,process,location)
+        updateProcess(id,flow,amount,description)

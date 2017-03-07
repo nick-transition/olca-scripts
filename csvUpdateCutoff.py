@@ -2,9 +2,9 @@ import org.openlca.core.model.Exchange;
 import csv
 
 # Path to csv template containing inventory information
-filePath = 'C:/Users/nstoddar/Data/cutofftemplate-jb.csv'
+filePath = 'C:/Users/nstoddar/Data/template.csv'
 
-def updateCutoff(folder,proKey,flowKey,flowConversion,targetRefId):
+def updateCutoff(folder,proKey,flowKey,flowConversion,targetRefId)
     # Initial Conditions
     idX=[]
     flowId = []
@@ -22,7 +22,6 @@ def updateCutoff(folder,proKey,flowKey,flowConversion,targetRefId):
             return flowId
         else:
             return flowId
-
     # Get list of target process ids
     olca.eachProcess(checkCat)
     olca.eachFlow(checkFlowRef)
@@ -30,37 +29,26 @@ def updateCutoff(folder,proKey,flowKey,flowConversion,targetRefId):
     if len(flowId)==0 or len(flowId)>1:
         log.error("Replacement flow could not be found. Please check flow UUID: {}",targetRefId)
 
-    if len(idX)<1:
-      log.error("No replacement processes found for {}",proKey)
-
     newFlow = olca.getFlow(flowId[0])
     unit = newFlow.getReferenceFactor().getFlowProperty().getUnitGroup().getReferenceUnit()
-    numUpdates = 0
 
     for id in idX:
       pro = olca.getProcess(id)
       exs = pro.getExchanges()
-      oldFlow = None
-      flowFound = False
 
       for ex in exs:
         if ex.flow.name.find(flowKey)>=0:
-          flowFound = True
-          numUpdates += 1
-          log.info("Updating Process:{} Flow:{}",pro.name,ex.flow.name)
+          log.info("Process:{} Flow:{}",pro.name,ex.flow.name)
           e = Exchange()
-          e.setFlow(newFlow)
-          e.amountValue = ex.amountValue * float(flowConversion)
+          e.setFlow(flow)
+          e.amountValue = ex.amountValue * flowConversion
           e.unit = unit
           e.baseUncertainty = ex.baseUncertainty
           e.input = ex.input
-          oldFlow = ex
-        if flowFound == True:
-          log.info("Updated process with flow: {}",e.flow.name)
-          pro.getExchanges().remove(oldFlow)
-          pro.getExchanges().add(e)
-          olca.updateProcess(pro)
-    log.info(str(numUpdates))
+
+      log.info(e.flow.name)
+      pro.getExchanges().add(e)
+      olca.updateProcess(pro)
 
 with open(filePath, 'rb') as csvfile:
     linereader = csv.reader(csvfile, delimiter=',',quotechar='"')
@@ -69,7 +57,6 @@ with open(filePath, 'rb') as csvfile:
         folder = row[0].replace("\"","").strip()
         proKey = row[1].replace("\"","").strip()
         flowKey = row[2].replace("\"","").strip()
-        conversion = row[3]
+        conversion = row[3].replace("\"","").strip()
         refId = row[4].replace("\"","").strip()
-        log.info("Evaluating row contents: {}",str(row))
         updateCutoff(folder,proKey,flowKey,conversion,refId)
