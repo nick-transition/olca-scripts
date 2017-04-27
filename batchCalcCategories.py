@@ -5,11 +5,11 @@ import org.openlca.app.db.Database as Database
 import org.openlca.core.matrix.LongPair as LongPair
 import csv
 
-def runBatch(fname,subcat,category)
+def runBatch(fname,subcat,keyword):
     idX=[]
 
     def checkCat(p):
-      if p.getCategory().name == subcat:
+      if p.getCategory().name == subcat and p.name.find(keyword)==0:
         idX.append(p.getId())
         return idX
       else:
@@ -26,6 +26,7 @@ def runBatch(fname,subcat,category)
     for id in idX:
     # update rice product system with a process
         log.info(str(id))
+
         replacement = olca.getProcess(id)
         rName = replacement.name
         rLoc  = replacement.location.name
@@ -33,7 +34,7 @@ def runBatch(fname,subcat,category)
         rFlow = rRef.flow
         rUnit = rRef.unit
         rProp = rRef.getFlowPropertyFactor()
-
+        log.info(str(replacement.location.name))
         sys = ProductSystem()
         sys.name = "temp"
         #product
@@ -52,7 +53,7 @@ def runBatch(fname,subcat,category)
         builder = ProductSystemBuilder(Cache.getMatrixCache(), preferSystems);
         for prc in sys.getProcesses():
           longPair = LongPair(prc.id,prc.getQuantitativeReference())
-          sysBuild = builder.autoComplete(sys,rRef)
+          sysBuild = builder.autoComplete(sys,longPair)
 
         olca.insertSystem(sys)
         Database.get().notifyUpdate(sys)
@@ -64,27 +65,32 @@ def runBatch(fname,subcat,category)
         system.setTargetFlowPropertyFactor(rProp)
         system.getProcesses().add(id)
 
-        #log.info(system.referenceProcess.name)
-        #log.info("Amount:{}, Units:{}, Process:{}, Property:{}",
-        #         system.targetAmount,system.targetUnit,
-        #         system.referenceExchange,system.getTargetFlowPropertyFactor().getFlowProperty().name)
+        log.info(system.referenceProcess.name)
+        log.info("Amount:{}, Units:{}, Process:{}, Property:{}",
+                system.targetAmount,system.targetUnit,
+                system.referenceExchange,system.getTargetFlowPropertyFactor().getFlowProperty().name)
 
         # Run calculation on the system
         result = olca.analyze(system,olca.getMethod("TRACI"))
         impacts = result.getImpactDescriptors()
-        processes = result.getProcessDescriptors()
-        for process in processes:
-            rowValue=[]
-            for impact in impacts:
-                iName = impact.name+" ("+impact.getReferenceUnit()+")"
-                if i==0:
-                    header.append(iName) if iName not in header else None
-                processContributions = result.getProcessContributions(impact)
-                #rowValue.append(str(process.quantitativeReference.unit))
-                rowValue.append(str(processContributions.getContribution(process).amount))
-            rowId = rName+"-"+rLoc+"-"+process.name
-            rows[rowId] = rowValue
-        i+=1
+
+        for impact in impacts:
+             log.info("Name: {}, Amount: {}, Units: {}",impact.name,result.getTotalImpactResult(impact).value,impact.getReferenceUnit())
+             #olca.inspect(result.getTotalImpactResult(impact))
+        #log.info(str(result.getTotalImpactResults()))
+        #processes = result.getProcessDescriptors()
+        # for process in processes:
+        #     rowValue=[]
+        #     for impact in impacts:
+        #         iName = impact.name+" ("+impact.getReferenceUnit()+")"
+        #         if i==0:
+        #             header.append(iName) if iName not in header else None
+        #         processContributions = result.getProcessContributions(impact)
+        #         #rowValue.append(str(process.quantitativeReference.unit))
+        #         rowValue.append(str(processContributions.getContribution(process).amount))
+        #     rowId = rName+"-"+rLoc+"-"+process.name
+        #     rows[rowId] = rowValue
+        # i+=1
         olca.deleteSystem(system)
 
 
@@ -108,6 +114,9 @@ batches = ["Establishing a crop","Fertilizer application","Harvesting",
 "Operation of agricultural irrigation equipment","Pest control",
 "Provision of agricultural machinery","Soil amendment"]
 
-for batch in batches:
-    fname = batch.replace(" ","")
-    log.info(fname)
+runBatch("rice","ISIC 0112: Growing of rice","rice")
+
+# for batch in batches:
+#     fname = batch.replace(" ","")
+#     log.info(fname)
+#     runBatch(fname,batch,"")
