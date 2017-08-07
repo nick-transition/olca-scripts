@@ -37,17 +37,19 @@ def calculate(system, method):
                 calculator = SystemCalculator(Cache.getMatrixCache(), App.getSolver())
                 setup = CalculationSetup(system)
                 setup.impactMethod = Descriptors.toDescriptor(method)
+                log.info(str(method))
                 result = calculator.calculateContributions(setup)
                 return ContributionResultProvider(result, Cache.getEntityCache())
 
 def writeCategories(method, writer):
                 row = ['']
                 for category in method.getImpactCategories():
-                               row.append(category.getName())
+                               row.append(category.getName() + ' ('+category.getReferenceUnit()+')')
                 writer.writerow(row)
 
 def export(system, method, result, writer):
-                row = [system.getName()]
+                rowLabel = system.getName()+'-'+system.getReferenceProcess().location.name
+                row = [rowLabel]
                 for category in method.getImpactCategories():
                                value = result.getTotalImpactResult(Descriptors.toDescriptor(category)).value
                                row.append(value)
